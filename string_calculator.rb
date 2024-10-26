@@ -28,3 +28,6 @@ class StringCalculator
     numbers
   end
 end
+
+# Example Usage
+puts StringCalculator.add("1,5")
