@@ -1,0 +1,76 @@
+# spec/your_code_spec.rb
+require 'spec_helper'
+require_relative '../string_calculator'  # Adjust the path as needed
+
+# string_calculator_spec.rb
+require './string_calculator'
+
+RSpec.describe StringCalculator do
+  describe '.add' do
+    it 'returns 0 for an empty string' do
+      expect(StringCalculator.add("")).to eq(0)
+    end
+
+    it 'returns the number for a single number' do
+      expect(StringCalculator.add("1")).to eq(1)
+    end
+
+    it 'returns the sum for two comma-separated numbers' do
+      expect(StringCalculator.add("1,5")).to eq(6)
+    end
+
+    it 'returns the sum for numbers with new lines' do
+      expect(StringCalculator.add("1\n2,3")).to eq(6)
+    end
+
+    it 'supports custom delimiters' do
+      expect(StringCalculator.add("//;\n1;2")).to eq(3)
+      expect(StringCalculator.add("//|\n1|2|3")).to eq(6)
+    end
+
+    it 'raises an error for negative numbers' do
+      expect { StringCalculator.add("-1") }.to raise_error("negative numbers not allowed: -1")
+      expect { StringCalculator.add("1,-2,3,-4") }.to raise_error("negative numbers not allowed: -2, -4")
+    end
+
+    it 'handles multiple numbers and mixed delimiters' do
+      expect(StringCalculator.add("//;\n1;2\n3,4")).to eq(10)
+      expect(StringCalculator.add("//-\n1-2-3,4")).to eq(10)
+    end
+
+    it 'ignores numbers larger than 1000' do
+      expect(StringCalculator.add("1001,2")).to eq(2)
+      expect(StringCalculator.add("1000,1001")).to eq(1000)
+    end
+  end
+end
+
+
+
+class StringCalculator
+  def self.add(numbers)
+    return 0 if numbers.empty?
+
+    delimiter = /,|\n/
+    numbers = parse_delimiter(numbers)
+
+    # Split the numbers by the defined delimiter
+    number_array = numbers.split(delimiter).map(&:to_i)
+
+    # Check for negative numbers
+    negatives = number_array.select { |num| num < 0 }
+    raise "negative numbers not allowed: #{negatives.join(', ')}" unless negatives.empty?
+
+    number_array.sum
+  end
+
+  def self.parse_delimiter(numbers)
+    if numbers.start_with?("//")
+      parts = numbers.split("\n", 2)
+      delimiter = parts[0][2..-1]  # Extract the delimiter
+      numbers = parts[1]
+      numbers.gsub!(delimiter, ',') # Replace custom delimiter with comma
+    end
+    numbers
+  end
+end
